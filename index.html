@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Berlin Bureaucracy Navigator</title>
+<meta name="description" content="Your Berlin paperwork, in the right order. A personalised, dependency-ordered checklist for new arrivals.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* =========================================================
+   1. DESIGN TOKENS — the only place hex values may appear
+   ========================================================= */
+:root {
+  /* Brand blues */
+  --ink:        #13293D;
+  --primary:    #006494;
+  --secondary:  #247BA0;
+  --accent:     #1B98E0;
+  --surface:    #E8F1F2;
+  --card:       #FFFFFF;
+
+  /* Derived neutrals */
+  --ink-muted:      #4A5D6E;   /* 5.9:1 on --surface */
+  --hairline:       #CFDFE3;
+  --secondary-tint: #E3EFF5;
+  --accent-tint:    #E6F4FC;
+  --scrim:          rgba(19, 41, 61, 0.55);
+
+  /* Status — muted, outside the brand blues */
+  --warning:      #C77700;
+  --warning-ink:  #8A5300;     /* text on --warning-tint, 5.5:1 */
+  --warning-tint: #FBEFD9;
+  --success:      #2E7D5B;
+  --success-tint: #E3F2EA;
+  --error:        #C0392B;
+  --error-tint:   #FBE9E7;
+
+  /* Type families */
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body:    Roboto, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Type scale (mobile) */
+  --fs-display: 32px;  --fw-display: 700;  --lh-display: 1.15;
+  --fs-h1:      26px;  --fw-h1:      700;  --lh-h1:      1.2;
+  --fs-h2:      20px;  --fw-h2:      600;  --lh-h2:      1.25;
+  --fs-body:    16px;  --fw-body:    400;  --lh-body:    1.5;
+  --fs-small:   14px;  --fw-small:   400;  --lh-small:   1.45;
+  --fs-label:   12px;  --fw-label:   500;  --lh-label:   1.4;
+
+  /* Spacing (multiples of 4) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Shape & layout */
+  --radius: 8px;
+  --radius-pill: 999px;
+  --tap: 44px;
+  --container: 640px;
+  --header-h: 56px;
+  --focus-ring: 2px solid var(--accent);
+  --rail-w: 2px;
+  --marker: 44px;
+  --dur: 200ms;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --fs-display: 44px;
+    --fs-h1:      32px;
+    --fs-h2:      22px;
+    --header-h:   64px;
+  }
+}
+
+/* =========================================================
+   2. BASE
+   ========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + var(--space-4)); }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-display); color: var(--ink); margin: 0; }
+p { margin: 0; }
+a { color: var(--secondary); text-underline-offset: 3px; text-decoration: none; }
+a:hover, a:focus-visible { text-decoration: underline; }
+:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: absolute; left: var(--space-4); top: -100px; z-index: 100;
+  background: var(--card); color: var(--ink); padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+}
+.skip-link:focus { top: var(--space-2); }
+
+.eyebrow {
+  font-size: var(--fs-label); font-weight: var(--fw-label); line-height: var(--lh-label);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary);
+}
+.section { padding-block: var(--space-12) var(--space-8); }
+.section-head { display: grid; gap: var(--space-2); margin-bottom: var(--space-6); }
+.section-head h2 { font-size: var(--fs-h1); font-weight: var(--fw-h1); line-height: var(--lh-h1); }
+.section-head p { color: var(--ink-muted); }
+
+/* =========================================================
+   3. COMPONENTS
+   ========================================================= */
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: var(--tap); padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius); border: 2px solid transparent;
+  font-weight: 700; font-size: var(--fs-body); line-height: 1.2;
+  cursor: pointer; text-decoration: none;
+  transition: background-color var(--dur), border-color var(--dur), transform var(--dur);
+}
+.btn:hover, .btn:focus-visible { text-decoration: none; }
+.btn-primary { background: var(--accent); color: var(--ink); }
+.btn-primary:hover { background: var(--primary); color: var(--card); }
+.btn-primary:active { transform: translateY(1px); }
+.btn-secondary { background: var(--card); color: var(--primary); border-color: var(--primary); }
+.btn-secondary:hover { background: var(--secondary-tint); }
+.btn-block { width: 100%; }
+
+/* Header */
+.site-header {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--primary); color: var(--card);
+  height: var(--header-h);
+}
+.site-header .container {
+  height: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+}
+.brand {
+  font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--card);
+  display: inline-flex; align-items: center; min-height: var(--tap);
+}
+.brand:hover, .brand:focus-visible { text-decoration: none; }
+.brand span { opacity: 0.8; font-weight: 400; margin-left: var(--space-1); }
+.menu-btn {
+  width: var(--tap); height: var(--tap); display: grid; place-items: center;
+  background: transparent; border: 0; border-radius: var(--radius); color: var(--card); cursor: pointer;
+}
+.menu-btn:hover { background: rgba(255,255,255,0.12); }
+.menu-btn:focus-visible { outline-color: var(--card); }
+
+/* Menu panel */
+.scrim {
+  position: fixed; inset: 0; z-index: 30; background: var(--scrim);
+  opacity: 0; transition: opacity var(--dur);
+}
+.scrim.is-open { opacity: 1; }
+.menu-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 40;
+  width: min(320px, 86vw); background: var(--card);
+  padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2);
+  transform: translateX(100%); transition: transform var(--dur) ease-out;
+}
+.menu-panel.is-open { transform: translateX(0); }
+.menu-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
+.menu-panel-head .brand { color: var(--ink); }
+.menu-panel .menu-btn { color: var(--ink); }
+.menu-panel .menu-btn:hover { background: var(--surface); }
+.menu-panel .menu-btn:focus-visible { outline-color: var(--accent); }
+.menu-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.menu-list a {
+  display: flex; align-items: center; min-height: var(--tap); padding-inline: var(--space-3);
+  border-radius: var(--radius); color: var(--ink); font-weight: 500;
+}
+.menu-list a:hover, .menu-list a:focus-visible { background: var(--surface); text-decoration: none; }
+.menu-divider { border: 0; border-top: 1px solid var(--hairline); margin: var(--space-2) 0; }
+.menu-note { margin-top: auto; font-size: var(--fs-label); color: var(--ink-muted); padding: var(--space-3); }
+
+/* Hero */
+.hero { padding-block: var(--space-12) var(--space-8); }
+.hero .container { display: grid; gap: var(--space-4); }
+.hero h1 { font-size: var(--fs-display); font-weight: var(--fw-display); line-height: var(--lh-display); }
+.hero-lede { font-size: 18px; color: var(--ink-muted); max-width: 34ch; }
+.hero-path {
+  list-style: none; padding: 0; margin: var(--space-2) 0 var(--space-4);
+  display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center;
+  font-size: var(--fs-small); color: var(--ink-muted);
+}
+.hero-path li { display: inline-flex; align-items: center; gap: var(--space-2); }
+.hero-path li + li::before { content: "→"; color: var(--secondary); }
+.hero-path b { color: var(--ink); font-weight: 500; }
+
+/* Questionnaire */
+.question {
+  border: 0; padding: 0; margin: 0 0 var(--space-8);
+}
+.question legend {
+  padding: 0; margin-bottom: var(--space-3);
+  font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-h2); line-height: var(--lh-h2);
+}
+.question legend .q-num {
+  display: block; font-family: var(--font-body);
+  font-size: var(--fs-label); font-weight: var(--fw-label); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--primary); margin-bottom: var(--space-1);
+}
+.q-hint { font-size: var(--fs-small); color: var(--ink-muted); margin: calc(-1 * var(--space-2)) 0 var(--space-3); }
+.options { display: grid; gap: var(--space-2); }
+@media (min-width: 768px) { .options.two { grid-template-columns: 1fr 1fr; } }
+.option { position: relative; }
+.option input { position: absolute; opacity: 0; inset: 0; margin: 0; pointer-events: none; }
+.option label {
+  display: flex; align-items: center; gap: var(--space-3);
+  min-height: 52px; padding: var(--space-3) var(--space-4);
+  background: var(--card); border: 2px solid var(--secondary); border-radius: var(--radius);
+  cursor: pointer; font-weight: 500;
+  transition: background-color var(--dur), color var(--dur), border-color var(--dur);
+}
+.option label:hover { background: var(--secondary-tint); }
+.option label .radio-dot {
+  flex: none; width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--secondary); display: grid; place-items: center;
+}
+.option label small { display: block; font-weight: 400; font-size: var(--fs-small); opacity: 0.85; }
+.option input:checked + label { background: var(--primary); border-color: var(--primary); color: var(--card); }
+.option input:checked + label .radio-dot { border-color: var(--card); }
+.option input:checked + label .radio-dot::after {
+  content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--card);
+}
+.option input:focus-visible + label { outline: var(--focus-ring); outline-offset: 2px; }
+.question.has-error .options label { border-color: var(--error); }
+
+.form-actions { display: grid; gap: var(--space-3); }
+.form-error {
+  display: flex; gap: var(--space-2); align-items: flex-start;
+  background: var(--error-tint); color: var(--ink); border-left: 4px solid var(--error);
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius); font-size: var(--fs-small);
+}
+.form-error strong { color: var(--error); }
+
+/* Badges / pills */
+.badge {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  padding: 2px var(--space-2); border-radius: var(--radius-pill);
+  font-size: var(--fs-label); font-weight: var(--fw-label); line-height: var(--lh-label);
+  background: var(--secondary-tint); color: var(--ink);
+}
+.badge svg { flex: none; }
+.badge-high { background: var(--warning-tint); color: var(--warning-ink); box-shadow: inset 0 0 0 1px var(--warning); }
+.badge-done { background: var(--success-tint); color: var(--success); }
+.badge-next { background: var(--accent-tint); color: var(--primary); box-shadow: inset 0 0 0 1px var(--accent); }
+.badge-locked { background: var(--surface); color: var(--ink-muted); }
+
+/* Notices */
+.notice {
+  display: flex; gap: var(--space-3); align-items: flex-start;
+  padding: var(--space-4); border-radius: var(--radius);
+  background: var(--card); border: 1px solid var(--hairline);
+  font-size: var(--fs-small);
+}
+.notice-warning { background: var(--warning-tint); border-color: var(--warning); border-left-width: 4px; }
+.notice-warning .notice-icon { color: var(--warning-ink); }
+.notice strong { display: block; font-size: var(--fs-body); margin-bottom: var(--space-1); }
+.notice-icon { flex: none; margin-top: 2px; }
+
+/* Empty state */
+.empty {
+  text-align: center; padding: var(--space-8) var(--space-4);
+  background: var(--card); border: 1px dashed var(--secondary); border-radius: var(--radius);
+  color: var(--ink-muted); display: grid; gap: var(--space-2); justify-items: center;
+}
+.empty h3 { font-size: var(--fs-h2); font-weight: var(--fw-h2); }
+
+/* Progress */
+.progress { display: grid; gap: var(--space-2); margin-bottom: var(--space-6); }
+.progress-row { display: flex; justify-content: space-between; font-size: var(--fs-small); }
+.progress-row strong { font-weight: 700; }
+.progress-track { height: 8px; background: var(--card); border-radius: var(--radius-pill); overflow: hidden; border: 1px solid var(--hairline); }
+.progress-fill { height: 100%; background: var(--success); width: 0; transition: width var(--dur) ease-out; }
+
+/* Checklist with rail */
+.checklist { list-style: none; margin: var(--space-6) 0 0; padding: 0; }
+.step {
+  position: relative;
+  display: grid; grid-template-columns: var(--marker) 1fr; column-gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+.step::before {                    /* the rail */
+  content: ""; position: absolute;
+  left: calc(var(--marker) / 2 - var(--rail-w) / 2);
+  top: var(--marker); bottom: 0; width: var(--rail-w);
+  background: var(--hairline);
+}
+.step:last-child::before { display: none; }
+.step.is-done::before { background: var(--success); }
+
+.marker {
+  width: var(--marker); height: var(--marker); border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  font-family: var(--font-display); font-weight: 700; font-size: 18px;
+  background: var(--card); color: var(--primary); border: 2px solid var(--primary);
+  position: relative; z-index: 1;
+  transition: background-color var(--dur), border-color var(--dur), color var(--dur);
+}
+.marker:hover { background: var(--secondary-tint); }
+.step.is-locked .marker { color: var(--ink-muted); border-color: var(--hairline); border-style: dashed; }
+.step.is-next .marker { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-tint); }
+.step.is-done .marker { background: var(--success); border-color: var(--success); color: var(--card); }
+
+.step-card {
+  background: var(--card); border: 1px solid var(--hairline); border-radius: var(--radius);
+  min-width: 0;
+  transition: border-color var(--dur), box-shadow var(--dur);
+}
+.step.is-next .step-card { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.step.is-locked .step-card { background: var(--card); }
+.step.is-locked .step-title, .step.is-locked .step-desc { color: var(--ink-muted); }
+
+.step-toggle {
+  width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer;
+  padding: var(--space-4); display: grid; gap: var(--space-2); border-radius: var(--radius);
+}
+.step-toggle-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
+.step-title { font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-h2); line-height: var(--lh-h2); color: var(--ink); }
+.step.is-done .step-title { text-decoration: line-through; text-decoration-color: var(--success); text-decoration-thickness: 2px; }
+.step-desc { font-size: var(--fs-small); line-height: var(--lh-small); color: var(--ink-muted); }
+.chev { flex: none; margin-top: 2px; color: var(--primary); transition: transform var(--dur); }
+.step-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.step-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.step-blocker { font-size: var(--fs-small); color: var(--ink-muted); display: flex; gap: var(--space-2); align-items: flex-start; }
+.step-blocker b { color: var(--ink); font-weight: 500; }
+
+.step-panel {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur) ease-out;
+}
+.step-panel.is-open { grid-template-rows: 1fr; }
+.step-panel > div { overflow: hidden; }
+.step-body {
+  border-top: 1px solid var(--hairline); margin-inline: var(--space-4);
+  padding-block: var(--space-4); display: grid; gap: var(--space-4);
+}
+.facts { display: grid; gap: var(--space-3); margin: 0; }
+@media (min-width: 768px) { .facts { grid-template-columns: 1fr 1fr; } }
+.fact dt { font-size: var(--fs-label); font-weight: var(--fw-label); text-transform: uppercase; letter-spacing: 0.06em; color: var(--primary); }
+.fact dd { margin: 0; font-size: var(--fs-small); line-height: var(--lh-small); }
+.docs h4, .gotcha h4 {
+  margin: 0 0 var(--space-2); font-family: var(--font-body);
+  font-size: var(--fs-label); font-weight: var(--fw-label); text-transform: uppercase; letter-spacing: 0.06em; color: var(--primary);
+}
+.docs ul { margin: 0; padding-left: var(--space-6); font-size: var(--fs-small); display: grid; gap: var(--space-1); }
+.gotcha {
+  background: var(--surface); border-radius: var(--radius); padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--secondary); font-size: var(--fs-small);
+}
+.unlocks { font-size: var(--fs-small); color: var(--ink-muted); }
+.unlocks b { color: var(--ink); font-weight: 500; }
+.step-foot {
+  display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; justify-content: space-between;
+}
+.step-foot .meta { font-size: var(--fs-label); color: var(--ink-muted); }
+.official-link { font-size: var(--fs-small); font-weight: 500; display: inline-flex; align-items: center; min-height: var(--tap); }
+
+/* Legal pages */
+.legal { padding-block: var(--space-12); }
+.legal h1 { font-size: var(--fs-h1); font-weight: var(--fw-h1); line-height: var(--lh-h1); margin-bottom: var(--space-4); }
+.legal .card { background: var(--card); border: 1px solid var(--hairline); border-radius: var(--radius); padding: var(--space-6); display: grid; gap: var(--space-4); }
+.legal .placeholder { background: var(--warning-tint); border-left: 4px solid var(--warning); padding: var(--space-3) var(--space-4); border-radius: var(--radius); font-size: var(--fs-small); }
+
+/* Footer */
+.site-footer {
+  border-top: 1px solid var(--hairline); padding-block: var(--space-8);
+  font-size: var(--fs-small); line-height: var(--lh-small); color: var(--ink-muted);
+}
+.site-footer .container { display: grid; gap: var(--space-3); }
+.site-footer strong { color: var(--ink); }
+.site-footer a { color: var(--primary); }   /* --secondary is 4.1:1 on --surface; --primary keeps AA */
+.footer-links { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.footer-links a { display: inline-flex; align-items: center; min-height: var(--tap); font-weight: 500; }
+
+/* Motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="#top">Berlin<span>Navigator</span></a>
+    <button class="menu-btn" id="menu-open" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu-panel">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="scrim" id="menu-scrim" hidden></div>
+<nav class="menu-panel" id="menu-panel" aria-label="Main menu" hidden>
+  <div class="menu-panel-head">
+    <span class="brand">Berlin<span>Navigator</span></span>
+    <button class="menu-btn" id="menu-close" type="button" aria-label="Close menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <ul class="menu-list">
+    <li><a href="#top">Start</a></li>
+    <li><a href="#questions">Answer 4 questions</a></li>
+    <li><a href="#checklist">Your checklist</a></li>
+  </ul>
+  <hr class="menu-divider">
+  <ul class="menu-list">
+    <li><a href="#impressum">Impressum</a></li>
+    <li><a href="#datenschutz">Datenschutz</a></li>
+  </ul>
+  <p class="menu-note">Deutsch coming later.</p>
+</nav>
+
+<main id="main">
+  <!-- ============ TOOL VIEW ============ -->
+  <div id="view-tool">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="container">
+        <p class="eyebrow">For students &amp; new arrivals</p>
+        <h1 id="hero-title">Your Berlin paperwork, in the right order.</h1>
+        <p class="hero-lede">Answer three or four quick questions. Get only the steps that apply to you, sorted so each one unlocks the next.</p>
+        <ol class="hero-path" aria-label="Typical order">
+          <li><b>Address</b></li>
+          <li><b>Anmeldung</b></li>
+          <li>Bank &amp; insurance</li>
+          <li>Everything else</li>
+        </ol>
+        <div><a class="btn btn-primary" href="#questions">Start — it takes 30 seconds</a></div>
+      </div>
+    </section>
+
+    <section class="section" id="questions" aria-labelledby="q-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Step 1 of 2</p>
+          <h2 id="q-title">Tell us about you</h2>
+          <p>No typing, nothing stored. You can change any answer and your checklist updates.</p>
+        </div>
+        <form id="intake" novalidate>
+          <div id="questions-root"></div>
+          <div class="form-actions">
+            <div class="form-error" id="form-error" role="alert" hidden></div>
+            <button class="btn btn-primary btn-block" type="submit">Show my checklist</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="section" id="checklist" aria-labelledby="c-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Step 2 of 2</p>
+          <h2 id="c-title">Your checklist</h2>
+          <p>Work top to bottom. Tap a step for documents, cost and the one thing that trips people up. Tap the number to mark it done.</p>
+        </div>
+        <div id="checklist-root" aria-live="polite"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ LEGAL VIEWS (placeholders) ============ -->
+  <section class="legal" id="view-impressum" hidden aria-labelledby="imp-title">
+    <div class="container">
+      <h1 id="imp-title" tabindex="-1">Impressum</h1>
+      <div class="card">
+        <p class="placeholder"><strong>Placeholder — not yet complete.</strong> German law (§ 5 DDG) requires an Impressum with the operator's name, postal address and contact details. Fill this in with your real details, or use a reputable generator.</p>
+        <p>Operator: <em>[Name]</em><br>Address: <em>[Street, postcode, city]</em><br>Email: <em>[address]</em></p>
+        <p><a href="#top">← Back to the checklist</a></p>
+      </div>
+    </div>
+  </section>
+  <section class="legal" id="view-datenschutz" hidden aria-labelledby="ds-title">
+    <div class="container">
+      <h1 id="ds-title" tabindex="-1">Datenschutzerklärung</h1>
+      <div class="card">
+        <p class="placeholder"><strong>Placeholder — not yet complete.</strong> A privacy policy is legally required. Draft it with a reputable generator or a professional; this isn't legal advice.</p>
+        <p>Notes for drafting: your answers stay in your browser and are not sent anywhere. The page loads the Roboto font from Google Fonts, which shares your IP address with Google; mention this, or self-host the font.</p>
+        <p><a href="#top">← Back to the checklist</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p><strong>Last updated: <span id="last-updated"></span></strong></p>
+    <p>This is an independent, unofficial tool. It is not legal or immigration advice. Rules, fees and deadlines change, so always check with the relevant authority (Bürgeramt, Landesamt für Einwanderung, BZSt, your university) before you act.</p>
+    <nav class="footer-links" aria-label="Legal">
+      <a href="#impressum">Impressum</a>
+      <a href="#datenschutz">Datenschutz</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- =========================================================
+     4. CONTENT — all steps & questions live here, as data.
+     Move this block to steps.js unchanged if you split files.
+     Values marked "verify" are starting points, not settled facts.
+     ========================================================= -->
+<script>
+const SITE_LAST_UPDATED = "30 October 2026";
+
+const QUESTIONS = [
+  {
+    id: "residency",
+    label: "Are you an EU / EEA / Swiss citizen?",
+    options: [
+      { value: "eu", label: "Yes", hint: "EU, EEA or Swiss passport" },
+      { value: "non-eu", label: "No", hint: "Any other nationality" }
+    ],
+    layout: "two"
+  },
+  {
+    id: "status",
+    label: "What's your situation?",
+    options: [
+      { value: "student", label: "Student" },
+      { value: "working-student", label: "Working student", hint: "Studying with a part-time job" },
+      { value: "employee", label: "Employee" },
+      { value: "arriving", label: "Just arrived, figuring it out" }
+    ]
+  },
+  {
+    id: "address",
+    label: "Do you already have a registerable Berlin address?",
+    hint: "One where the landlord will sign a Wohnungsgeberbestätigung.",
+    options: [
+      { value: "yes", label: "Yes" },
+      { value: "temporary", label: "Temporary only", hint: "Sublet, hostel, short-term" },
+      { value: "no", label: "Not yet" }
+    ]
+  },
+  {
+    id: "arrival",
+    label: "How did you arrive?",
+    showIf: { residency: ["non-eu"] },
+    options: [
+      { value: "visa-convert", label: "On a student or national visa to convert" },
+      { value: "need-permit", label: "I still need to sort out my permit", hint: "E.g. entered visa-free" }
+    ]
+  }
+];
+
+const STEPS = [
+  {
+    id: "permit-route-check",
+    title: "Check how long you can legally stay",
+    shortDesc: "Work out your current status and the last day to apply for a permit.",
+    appliesTo: { residency: ["non-eu"], arrival: ["need-permit"] },
+    dependsOn: [],
+    unlocks: ["residence-permit"],
+    deadline: "Do this now",
+    deadlineSeverity: "high",
+    fineNote: "If you entered visa-free you generally have 90 days in any 180, and your permit application must be in before that ends. Verify for your nationality.",
+    cost: "Free",
+    where: "The LEA website, your embassy, or your university's international office",
+    processingTime: "An hour of reading; ask the international office if unsure",
+    documents: [
+      "Passport with your entry stamp",
+      "Any visa or official letter you've received"
+    ],
+    gotcha: "Only some nationalities may enter visa-free and then apply for a permit from inside Germany. If you're not sure your route allows it, ask now, not on day 85.",
+    officialLink: "https://www.berlin.de/einwanderung/",
+    lastChecked: "2026-10"
+  },
+  {
+    id: "registerable-address",
+    title: "Find a registerable address",
+    shortDesc: "A flat or room where the landlord will sign your registration form.",
+    appliesTo: {},
+    dependsOn: [],
+    unlocks: ["anmeldung"],
+    deadline: "Before everything else",
+    deadlineSeverity: "medium",
+    cost: "Varies: rent plus a deposit (legally capped at 3 months' cold rent)",
+    where: "WG-Gesucht, ImmoScout24, student dorms via the Studierendenwerk",
+    processingTime: "Weeks to months, so start before you arrive",
+    documents: [
+      "Passport or ID",
+      "Proof of income, scholarship or blocked account",
+      "SCHUFA credit report if you have one (newcomers usually don't)"
+    ],
+    gotcha: "Ask before you sign: “Will you give me a Wohnungsgeberbestätigung?” Many sublets and short-term rentals won't, and without it you can't register.",
+    officialLink: "https://www.stw.berlin",
+    lastChecked: "2026-10"
+  },
+  {
+    id: "anmeldung",
+    title: "Anmeldung (address registration)",
+    shortDesc: "Register your Berlin address at a Bürgeramt.",
+    appliesTo: { residency: ["eu", "non-eu"], status: ["student", "working-student", "employee", "arriving"] },
+    dependsOn: ["registerable-address"],
+    unlocks: ["steuer-id", "bank-account", "health-insurance", "residence-permit"],
+    deadline: "Within 14 days of moving in",
+    deadlineSeverity: "high",
+    fineNote: "Fines reported up to €1,000 for missing it (verify)",
+    cost: "Free",
+    where: "Any Bürgeramt in Berlin (book a slot online)",
+    processingTime: "Confirmation (Meldebestätigung) issued on the spot",
+    documents: [
+      "Valid passport or ID",
+      "Wohnungsgeberbestätigung (landlord confirmation)",
+      "Completed Anmeldeformular"
+    ],
+    gotcha: "No landlord confirmation = no registration. Get it before you book. Appointments go fast, so check early in the morning for newly released slots.",
+    officialLink: "https://service.berlin.de/dienstleistung/120686/",
+    lastChecked: "2026-10"
+  },
+  {
+    id: "steuer-id",
+    title: "Steuer-ID (tax ID)",
+    shortDesc: "Your tax ID arrives by post automatically once you've registered.",
+    appliesTo: { status: ["student", "working-student", "employee", "arriving"] },
+    dependsOn: ["anmeldung"],
+    unlocks: [],
+    deadline: "Arrives ~2–5 weeks after Anmeldung (verify)",
+    deadlineSeverity: "low",
+    cost: "Free",
+    where: "Nowhere: the BZSt posts it to your registered address",
+    processingTime: "~2–5 weeks (verify)",
+    documents: ["Nothing to bring. Just make sure your name is on the letterbox."],
+    gotcha: "Put your name on the letterbox and door. If the letter can't be delivered it goes back, and you'll have to request it again from the BZSt. Employers need it to pay you correctly.",
+    officialLink: "https://www.bzst.de",
+    lastChecked: "2026-10"
+  },
+  {
+    id: "bank-account",
+    title: "Open a German bank account",
+    shortDesc: "For rent, salary and insurance direct debits.",
+    appliesTo: { residency: ["eu", "non-eu"] },
+    dependsOn: ["anmeldung"],
+    unlocks: ["health-insurance", "blocked-account"],
+    deadline: "Early: your first rent and salary need it",
+    deadlineSeverity: "low",
+    cost: "Free to a low monthly fee",
+    where: "An online bank (in the app) or a high-street branch",
+    processingTime: "Same day to ~2 weeks",
+    documents: [
+      "Passport or ID",
+      "Meldebestätigung (Anmeldung confirmation)",
+      "Steuer-ID if you have it (can be added later)"
+    ],
+    gotcha: "Some online banks open accounts without an Anmeldung, which helps if your appointment is weeks away. Prefer a German IBAN (DE…): some landlords and employers still expect one.",
+    officialLink: "https://service.berlin.de",
+    lastChecked: "2026-10"
+  },
+  {
+    id: "health-insurance",
+    title: "Get health insurance",
+    shortDesc: "Mandatory in Germany, and your university or employer will ask for proof.",
+    appliesTo: { residency: ["eu", "non-eu"] },
+    dependsOn: ["anmeldung"],
+    unlocks: ["university-enrollment", "residence-permit"],
+    deadline: "Before enrollment or your first day of work",
+    deadlineSeverity: "medium",
+    cost: "~€125–135/month on the public student rate (verify). Employees split the cost with their employer.",
+    where: "A public insurer (Krankenkasse), mostly online",
+    processingTime: "Proof of insurance often within 1–3 days",
+    documents: [
+      "Passport or ID",
+      "Meldebestätigung",
+      "University admission letter (students) or employment contract (employees)",
+      "Bank details for the direct debit"
+    ],
+    gotcha: "Students: ask the insurer to send your insurance status to your university electronically, or enrollment won't complete. EU students with an EHIC may be exempt and need an exemption certificate instead (verify).",
+    officialLink: "https://service.berlin.de",
+    lastChecked: "2026-10"
+  },
+  {
+    id: "university-enrollment",
+    title: "Complete university enrollment",
+    shortDesc: "Turn your admission into a student ID and enrollment certificate.",
+    appliesTo: { status: ["student", "working-student"] },
+    dependsOn: ["health-insurance"],
+    unlocks: ["residence-permit"],
+    deadline: "By your university's enrollment deadline",
+    deadlineSeverity: "medium",
+    cost: "Semester fee, roughly €300–350 in Berlin (verify with your university)",
+    where: "Your university's student office, usually via its online portal",
+    processingTime: "A few days once every document is in",
+    documents: [
+      "Admission letter",
+      "Passport or ID",
+      "Electronic proof of health insurance (sent by your insurer)",
+      "Certified copies of certificates, if requested",
+      "Proof you've paid the semester fee"
+    ],
+    gotcha: "Enrollment isn't final until the insurer's electronic notice arrives. Sort insurance first, not the night before the deadline.",
+    officialLink: "https://www.fu-berlin.de/sites/abt-1/referate/pe/welcome-service/neu-in-deutschland/erste-schritte/buergeramt.html",
+    lastChecked: "2026-10"
+  },
+  {
+    id: "blocked-account",
+    title: "Start blocked-account payouts",
+    shortDesc: "Link your current account so your monthly allowance starts arriving (if you used a blocked account).",
+    appliesTo: { residency: ["non-eu"], status: ["student", "working-student", "arriving"] },
+    dependsOn: ["bank-account"],
+    unlocks: [],
+    deadline: "Monthly payouts: activate before your cash runs out",
+    deadlineSeverity: "low",
+    cost: "Pre-funded ~€11,904/year (verify the current required amount); provider fees vary",
+    where: "Your blocked-account provider (online)",
+    processingTime: "Payouts typically start ~1–2 weeks after linking (verify with provider)",
+    documents: [
+      "German IBAN in your name",
+      "Meldebestätigung (some providers)",
+      "Provider identity check"
+    ],
+    gotcha: "Payouts go to a current account in your own name, so open the bank account first. Skip this step if you're funded by a scholarship or a sponsor instead.",
+    officialLink: "https://www.berlin.de/einwanderung/",
+    lastChecked: "2026-10"
+  },
+  {
+    id: "residence-permit",
+    title: "Apply for your residence permit",
+    shortDesc: "Convert your visa (or visa-free stay) into a residence permit at the LEA.",
+    appliesTo: { residency: ["non-eu"] },
+    dependsOn: ["anmeldung", "health-insurance", "university-enrollment", "permit-route-check"],
+    unlocks: [],
+    deadline: "Before your visa or visa-free stay expires",
+    deadlineSeverity: "high",
+    fineNote: "Apply before it expires. Applying in time usually lets you stay while it's processed (Fiktionsbescheinigung). Verify.",
+    cost: "~€110–150 (verify current fees)",
+    where: "Landesamt für Einwanderung (LEA), Berlin's immigration office, via its online application",
+    processingTime: "Weeks to months, so apply as early as you can",
+    documents: [
+      "Passport and a biometric photo",
+      "Meldebestätigung",
+      "Proof of health insurance",
+      "Enrollment certificate (students) or employment contract (employees)",
+      "Proof of funds: blocked account, scholarship or salary",
+      "Rental contract"
+    ],
+    gotcha: "LEA appointments are scarce. Apply online the moment your documents are ready; don't wait for the last weeks of your visa.",
+    officialLink: "https://www.berlin.de/einwanderung/",
+    lastChecked: "2026-10"
+  }
+];
+</script>
+
+<!-- =========================================================
+     5. LOGIC — pure, reads only appliesTo & dependsOn
+     ========================================================= -->
+<script>
+function matches(rule, answers) {
+  return Object.entries(rule || {}).every(([key, allowed]) => allowed.includes(answers[key]));
+}
+
+function visibleQuestions(answers) {
+  return QUESTIONS.filter(q => matches(q.showIf, answers));
+}
+
+function isComplete(answers) {
+  return visibleQuestions(answers).every(q => answers[q.id]);
+}
+
+/** Filter steps by answers, then topologically sort by dependsOn.
+    Edges to steps outside the filtered set are dropped, not the step. */
+function buildChecklist(answers, steps = STEPS) {
+  const kept = steps.filter(s => matches(s.appliesTo, answers));
+  const ids = new Set(kept.map(s => s.id));
+  const deps = new Map(kept.map(s => [s.id, s.dependsOn.filter(d => ids.has(d))]));
+
+  const ordered = [];
+  const placed = new Set();
+  while (ordered.length < kept.length) {
+    // stable Kahn's: first step (in data order) whose deps are all placed
+    const next = kept.find(s => !placed.has(s.id) && deps.get(s.id).every(d => placed.has(d)));
+    if (!next) throw new Error("Dependency cycle in STEPS");
+    ordered.push({ ...next, dependsOn: deps.get(next.id), unlocks: next.unlocks.filter(u => ids.has(u)) });
+    placed.add(next.id);
+  }
+  return ordered;
+}
+</script>
+
+<!-- =========================================================
+     6. UI
+     ========================================================= -->
+<script>
+(() => {
+  const state = { answers: {}, done: new Set(), expanded: new Set(), touched: false };
+
+  const $ = sel => document.querySelector(sel);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const icon = {
+    clock: '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    alert: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/></svg>',
+    check: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    checkSm: '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    lock: '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    arrow: '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    chev: '<svg class="chev" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+    info: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>'
+  };
+
+  /* ---------- Questionnaire ---------- */
+  function renderQuestions() {
+    const qs = visibleQuestions(state.answers);
+    $("#questions-root").innerHTML = qs.map((q, i) => {
+      const missing = state.touched && !state.answers[q.id];
+      return `
+      <fieldset class="question${missing ? " has-error" : ""}" id="q-${q.id}">
+        <legend><span class="q-num">Question ${i + 1} of ${qs.length}</span>${esc(q.label)}</legend>
+        ${q.hint ? `<p class="q-hint">${esc(q.hint)}</p>` : ""}
+        <div class="options${q.layout === "two" ? " two" : ""}">
+          ${q.options.map(o => {
+            const id = `opt-${q.id}-${o.value}`;
+            return `<div class="option">
+              <input type="radio" name="${q.id}" id="${id}" value="${o.value}"${state.answers[q.id] === o.value ? " checked" : ""}>
+              <label for="${id}"><span class="radio-dot"></span><span>${esc(o.label)}${o.hint ? `<small>${esc(o.hint)}</small>` : ""}</span></label>
+            </div>`;
+          }).join("")}
+        </div>
+      </fieldset>`;
+    }).join("");
+  }
+
+  function onAnswer(e) {
+    if (e.target.type !== "radio") return;
+    state.answers[e.target.name] = e.target.value;
+
+    // Drop answers to questions that are no longer shown (e.g. switched to EU)
+    const shown = new Set(visibleQuestions(state.answers).map(q => q.id));
+    Object.keys(state.answers).forEach(k => { if (!shown.has(k)) delete state.answers[k]; });
+
+    if (e.target.name === "address") {
+      state.done[state.answers.address === "yes" ? "add" : "delete"]("registerable-address");
+    }
+
+    const focusId = e.target.id;
+    renderQuestions();
+    document.getElementById(focusId)?.focus();
+    if (state.touched) renderError();
+    renderChecklist();
+  }
+
+  function renderError() {
+    const missing = visibleQuestions(state.answers).filter(q => !state.answers[q.id]);
+    const box = $("#form-error");
+    if (!missing.length) { box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML = `<span style="color:var(--error)">${icon.alert}</span><span><strong>Almost there.</strong> Please answer: ${missing.map(q => esc(q.label)).join(" · ")}</span>`;
+  }
+
+  function onSubmit(e) {
+    e.preventDefault();
+    state.touched = true;
+    renderQuestions();
+    renderError();
+    const firstMissing = visibleQuestions(state.answers).find(q => !state.answers[q.id]);
+    if (firstMissing) {
+      document.querySelector(`#q-${firstMissing.id} input`)?.focus();
+      return;
+    }
+    renderChecklist();
+    $("#checklist").scrollIntoView({ block: "start" });
+    $("#c-title").setAttribute("tabindex", "-1");
+    $("#c-title").focus({ preventScroll: true });
+  }
+
+  /* ---------- Checklist ---------- */
+  function deadlineNotice(answers) {
+    const msg = {
+      yes: "If you've already moved in, your clock is running. Book a Bürgeramt slot today.",
+      temporary: "A temporary place counts only if the host signs a Wohnungsgeberbestätigung. If they do, the 14 days start when you move in.",
+      no: "The clock starts the day you move in, so line up your Bürgeramt booking as soon as you have a move-in date."
+    }[answers.address];
+    const fine = STEPS.find(s => s.id === "anmeldung")?.fineNote;
+    return `<div class="notice notice-warning" role="note">
+      <span class="notice-icon">${icon.clock.replace(/14/g, "20")}</span>
+      <div><strong>Anmeldung: 14 days from moving in</strong>${esc(msg)} ${fine ? `<br><span style="color:var(--warning-ink)">${esc(fine)}.</span>` : ""}</div>
+    </div>`;
+  }
+
+  function renderChecklist() {
+    const root = $("#checklist-root");
+    if (!isComplete(state.answers)) {
+      root.innerHTML = `<div class="empty">
+        <span style="color:var(--secondary)">${icon.info}</span>
+        <h3>Your steps will appear here</h3>
+        <p>Answer the questions above and you'll get a numbered list in the order that actually works.</p>
+        <a class="btn btn-secondary" href="#questions">Go to the questions</a>
+      </div>`;
+      return;
+    }
+
+    let steps;
+    try { steps = buildChecklist(state.answers); }
+    catch (err) {
+      root.innerHTML = `<div class="form-error" role="alert"><span style="color:var(--error)">${icon.alert}</span><span><strong>Something went wrong building your list.</strong> Please reload the page. (${esc(err.message)})</span></div>`;
+      return;
+    }
+
+    const indexOf = new Map(steps.map((s, i) => [s.id, i]));
+    const titleOf = id => steps[indexOf.get(id)].title;
+    const doneCount = steps.filter(s => state.done.has(s.id)).length;
+
+    // Determine each step's state
+    let nextAssigned = false;
+    const status = steps.map(s => {
+      if (state.done.has(s.id)) return "done";
+      const blockers = s.dependsOn.filter(d => !state.done.has(d));
+      if (blockers.length) return "locked";
+      if (!nextAssigned) { nextAssigned = true; return "next"; }
+      return "ready";
+    });
+
+    const label = { done: "Done", next: "Up next", ready: "Ready to start", locked: "Locked" };
+    const badgeCls = { done: "badge-done", next: "badge-next", ready: "", locked: "badge-locked" };
+    const badgeIcon = { done: icon.checkSm, next: icon.arrow, ready: "", locked: icon.lock };
+
+    const progress = `<div class="progress">
+      <div class="progress-row"><span><strong>${doneCount} of ${steps.length}</strong> steps done</span>
+      <span>${doneCount === steps.length ? "All done. Willkommen in Berlin!" : `${steps.length - doneCount} to go`}</span></div>
+      <div class="progress-track" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${doneCount}">
+        <div class="progress-fill" style="width:${(doneCount / steps.length) * 100}%"></div>
+      </div>
+    </div>`;
+
+    const items = steps.map((s, i) => {
+      const st = status[i];
+      const open = state.expanded.has(s.id);
+      const blockers = s.dependsOn.filter(d => !state.done.has(d));
+      const sevCls = s.deadlineSeverity === "high" ? "badge-high" : "";
+      const sevIcon = s.deadlineSeverity === "high" ? icon.alert.replace(/20/g, "14") : icon.clock;
+
+      return `<li class="step is-${st}${st === "next" ? " is-next" : ""}" data-id="${s.id}">
+        <button class="marker" type="button" data-action="done" data-id="${s.id}"
+          aria-pressed="${st === "done"}" aria-label="Step ${i + 1}: mark ${esc(s.title)} as ${st === "done" ? "not done" : "done"}">
+          ${st === "done" ? icon.check : i + 1}
+        </button>
+        <div class="step-card">
+          <button class="step-toggle" type="button" data-action="toggle" data-id="${s.id}"
+            aria-expanded="${open}" aria-controls="panel-${s.id}">
+            <span class="step-toggle-top">
+              <span class="step-title">${esc(s.title)}</span>${icon.chev}
+            </span>
+            <span class="step-desc">${esc(s.shortDesc)}</span>
+            <span class="step-badges">
+              <span class="badge ${badgeCls[st]}">${badgeIcon[st]}${label[st]}</span>
+              <span class="badge ${sevCls}">${sevIcon}${esc(s.deadline)}</span>
+            </span>
+            ${st === "locked" ? `<span class="step-blocker">${icon.lock}<span>Do first: ${blockers.map(d => `<b>${esc(titleOf(d))}</b> (step ${indexOf.get(d) + 1})`).join(", ")}</span></span>` : ""}
+            ${s.deadlineSeverity === "high" && s.fineNote ? `<span class="step-blocker" style="color:var(--warning-ink)">${esc(s.fineNote)}</span>` : ""}
+          </button>
+          <div class="step-panel${open ? " is-open" : ""}" id="panel-${s.id}" role="region" aria-label="${esc(s.title)} details"${open ? "" : " inert"}>
+            <div><div class="step-body">
+              <dl class="facts">
+                <div class="fact"><dt>Cost</dt><dd>${esc(s.cost)}</dd></div>
+                <div class="fact"><dt>Where</dt><dd>${esc(s.where)}</dd></div>
+                <div class="fact"><dt>How long</dt><dd>${esc(s.processingTime)}</dd></div>
+                <div class="fact"><dt>Deadline</dt><dd>${esc(s.deadline)}</dd></div>
+              </dl>
+              <div class="docs"><h4>Bring</h4><ul>${s.documents.map(d => `<li>${esc(d)}</li>`).join("")}</ul></div>
+              <div class="gotcha"><h4>The gotcha</h4><p>${esc(s.gotcha)}</p></div>
+              ${s.unlocks.length ? `<p class="unlocks">This unlocks: ${s.unlocks.map(u => `<b>${esc(titleOf(u))}</b>`).join(", ")}</p>` : ""}
+              <div class="step-foot">
+                <a class="official-link" href="${esc(s.officialLink)}" target="_blank" rel="noopener">Official info ↗</a>
+                <span class="meta">Last checked ${esc(s.lastChecked)}</span>
+              </div>
+              <button class="btn ${st === "done" ? "btn-secondary" : "btn-primary"} btn-block" type="button" data-action="done" data-id="${s.id}">
+                ${st === "done" ? "Mark as not done" : "Mark as done"}
+              </button>
+            </div></div>
+          </div>
+        </div>
+      </li>`;
+    }).join("");
+
+    root.innerHTML = deadlineNotice(state.answers) + `<div style="height:var(--space-6)"></div>` + progress + `<ol class="checklist">${items}</ol>`;
+  }
+
+  function onChecklistClick(e) {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+    const isMarker = btn.classList.contains("marker");
+    if (action === "toggle") state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id);
+    if (action === "done") state.done.has(id) ? state.done.delete(id) : state.done.add(id);
+    renderChecklist();
+    // keep focus on the equivalent control after re-render
+    const sel = action === "toggle" ? `.step-toggle[data-id="${id}"]`
+      : isMarker ? `.marker[data-id="${id}"]` : `.step-body [data-action="done"][data-id="${id}"]`;
+    document.querySelector(sel)?.focus();
+  }
+
+  /* ---------- Menu ---------- */
+  const menu = $("#menu-panel"), scrim = $("#menu-scrim"), openBtn = $("#menu-open");
+  function openMenu() {
+    menu.hidden = scrim.hidden = false;
+    requestAnimationFrame(() => { menu.classList.add("is-open"); scrim.classList.add("is-open"); });
+    openBtn.setAttribute("aria-expanded", "true");
+    document.body.style.overflow = "hidden";
+    $("#menu-close").focus();
+  }
+  function closeMenu(returnFocus = true) {
+    menu.classList.remove("is-open"); scrim.classList.remove("is-open");
+    openBtn.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(() => { menu.hidden = scrim.hidden = true; }, reduce ? 0 : 200);
+    if (returnFocus) openBtn.focus();
+  }
+  openBtn.addEventListener("click", openMenu);
+  $("#menu-close").addEventListener("click", () => closeMenu());
+  scrim.addEventListener("click", () => closeMenu());
+  menu.addEventListener("click", e => { if (e.target.closest("a")) closeMenu(false); });
+  document.addEventListener("keydown", e => {
+    if (menu.hidden) return;
+    if (e.key === "Escape") { closeMenu(); return; }
+    if (e.key === "Tab") {
+      const f = [...menu.querySelectorAll("a, button")];
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+
+  /* ---------- Hash routing for legal pages ---------- */
+  const views = { impressum: "#view-impressum", datenschutz: "#view-datenschutz" };
+  function route() {
+    const key = location.hash.slice(1);
+    const legal = views[key];
+    $("#view-tool").hidden = !!legal;
+    Object.values(views).forEach(v => { $(v).hidden = v !== legal; });
+    if (legal) { window.scrollTo(0, 0); $(legal).querySelector("h1").focus(); }
+    else if (key) document.getElementById(key)?.scrollIntoView({ block: "start" });
+  }
+  window.addEventListener("hashchange", route);
+
+  /* ---------- Init ---------- */
+  $("#last-updated").textContent = SITE_LAST_UPDATED;
+  $("#intake").addEventListener("change", onAnswer);
+  $("#intake").addEventListener("submit", onSubmit);
+  $("#checklist-root").addEventListener("click", onChecklistClick);
+  renderQuestions();
+  renderChecklist();
+  route();
+})();
+</script>
+</body>
+</html>
