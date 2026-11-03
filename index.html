@@ -5,11 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Berlin Bureaucracy Navigator</title>
 <meta name="description" content="Your Berlin paperwork, in the right order. A personalised, dependency-ordered checklist for new arrivals.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/roboto-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
 
 <style>
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(fonts/roboto-latin-variable.woff2) format('woff2');
+}
+
 /* =========================================================
    1. DESIGN TOKENS — the only place hex values may appear
    ========================================================= */
@@ -383,12 +389,6 @@ button { font: inherit; color: inherit; }
 .step-foot .meta { font-size: var(--fs-label); color: var(--ink-muted); }
 .official-link { font-size: var(--fs-small); font-weight: 500; display: inline-flex; align-items: center; min-height: var(--tap); }
 
-/* Legal pages */
-.legal { padding-block: var(--space-12); }
-.legal h1 { font-size: var(--fs-h1); font-weight: var(--fw-h1); line-height: var(--lh-h1); margin-bottom: var(--space-4); }
-.legal .card { background: var(--card); border: 1px solid var(--hairline); border-radius: var(--radius); padding: var(--space-6); display: grid; gap: var(--space-4); }
-.legal .placeholder { background: var(--warning-tint); border-left: 4px solid var(--warning); padding: var(--space-3) var(--space-4); border-radius: var(--radius); font-size: var(--fs-small); }
-
 /* Footer */
 .site-footer {
   border-top: 1px solid var(--hairline); padding-block: var(--space-8);
@@ -430,20 +430,20 @@ button { font: inherit; color: inherit; }
   </div>
   <ul class="menu-list">
     <li><a href="#top">Start</a></li>
-    <li><a href="#questions">Answer 4 questions</a></li>
+    <li><a href="#questions">Answer the questions</a></li>
     <li><a href="#checklist">Your checklist</a></li>
   </ul>
   <hr class="menu-divider">
   <ul class="menu-list">
-    <li><a href="#impressum">Impressum</a></li>
-    <li><a href="#datenschutz">Datenschutz</a></li>
+    <li><a href="impressum.html">Impressum</a></li>
+    <li><a href="privacy.html">Privacy Policy</a></li>
+    <li><a href="disclaimer.html">Disclaimer</a></li>
   </ul>
   <p class="menu-note">Deutsch coming later.</p>
 </nav>
 
 <main id="main">
   <!-- ============ TOOL VIEW ============ -->
-  <div id="view-tool">
     <section class="hero" id="top" aria-labelledby="hero-title">
       <div class="container">
         <p class="eyebrow">For students &amp; new arrivals</p>
@@ -486,29 +486,6 @@ button { font: inherit; color: inherit; }
         <div id="checklist-root" aria-live="polite"></div>
       </div>
     </section>
-  </div>
-
-  <!-- ============ LEGAL VIEWS (placeholders) ============ -->
-  <section class="legal" id="view-impressum" hidden aria-labelledby="imp-title">
-    <div class="container">
-      <h1 id="imp-title" tabindex="-1">Impressum</h1>
-      <div class="card">
-        <p class="placeholder"><strong>Placeholder — not yet complete.</strong> German law (§ 5 DDG) requires an Impressum with the operator's name, postal address and contact details. Fill this in with your real details, or use a reputable generator.</p>
-        <p>Operator: <em>[Name]</em><br>Address: <em>[Street, postcode, city]</em><br>Email: <em>[address]</em></p>
-        <p><a href="#top">← Back to the checklist</a></p>
-      </div>
-    </div>
-  </section>
-  <section class="legal" id="view-datenschutz" hidden aria-labelledby="ds-title">
-    <div class="container">
-      <h1 id="ds-title" tabindex="-1">Datenschutzerklärung</h1>
-      <div class="card">
-        <p class="placeholder"><strong>Placeholder — not yet complete.</strong> A privacy policy is legally required. Draft it with a reputable generator or a professional; this isn't legal advice.</p>
-        <p>Notes for drafting: your answers stay in your browser and are not sent anywhere. The page loads the Roboto font from Google Fonts, which shares your IP address with Google; mention this, or self-host the font.</p>
-        <p><a href="#top">← Back to the checklist</a></p>
-      </div>
-    </div>
-  </section>
 </main>
 
 <footer class="site-footer">
@@ -516,8 +493,9 @@ button { font: inherit; color: inherit; }
     <p><strong>Last updated: <span id="last-updated"></span></strong></p>
     <p>This is an independent, unofficial tool. It is not legal or immigration advice. Rules, fees and deadlines change, so always check with the relevant authority (Bürgeramt, Landesamt für Einwanderung, BZSt, your university) before you act.</p>
     <nav class="footer-links" aria-label="Legal">
-      <a href="#impressum">Impressum</a>
-      <a href="#datenschutz">Datenschutz</a>
+      <a href="impressum.html">Impressum</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="disclaimer.html">Disclaimer</a>
     </nav>
   </div>
 </footer>
@@ -528,7 +506,7 @@ button { font: inherit; color: inherit; }
      Values marked "verify" are starting points, not settled facts.
      ========================================================= -->
 <script>
-const SITE_LAST_UPDATED = "30 October 2026";
+const SITE_LAST_UPDATED = "3 November 2026";
 
 const QUESTIONS = [
   {
@@ -1048,18 +1026,6 @@ function buildChecklist(answers, steps = STEPS) {
     }
   });
 
-  /* ---------- Hash routing for legal pages ---------- */
-  const views = { impressum: "#view-impressum", datenschutz: "#view-datenschutz" };
-  function route() {
-    const key = location.hash.slice(1);
-    const legal = views[key];
-    $("#view-tool").hidden = !!legal;
-    Object.values(views).forEach(v => { $(v).hidden = v !== legal; });
-    if (legal) { window.scrollTo(0, 0); $(legal).querySelector("h1").focus(); }
-    else if (key) document.getElementById(key)?.scrollIntoView({ block: "start" });
-  }
-  window.addEventListener("hashchange", route);
-
   /* ---------- Init ---------- */
   $("#last-updated").textContent = SITE_LAST_UPDATED;
   $("#intake").addEventListener("change", onAnswer);
@@ -1067,7 +1033,6 @@ function buildChecklist(answers, steps = STEPS) {
   $("#checklist-root").addEventListener("click", onChecklistClick);
   renderQuestions();
   renderChecklist();
-  route();
 })();
 </script>
 </body>
