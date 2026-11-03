@@ -5,7 +5,214 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy Policy · Berlin Bureaucracy Navigator</title>
 <link rel="preload" href="fonts/roboto-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/legal.css">
+<style>
+/* Legal page styles — tokens and components mirror index.html; keep them in sync. */
+
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(fonts/roboto-latin-variable.woff2) format('woff2');
+}
+
+/* =========================================================
+   DESIGN TOKENS
+   ========================================================= */
+:root {
+  --ink:        #13293D;
+  --primary:    #006494;
+  --secondary:  #247BA0;
+  --accent:     #1B98E0;
+  --surface:    #E8F1F2;
+  --card:       #FFFFFF;
+
+  --ink-muted:      #4A5D6E;
+  --hairline:       #CFDFE3;
+  --secondary-tint: #E3EFF5;
+  --scrim:          rgba(19, 41, 61, 0.55);
+
+  --warning:      #C77700;
+  --warning-tint: #FBEFD9;
+
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body:    Roboto, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --fs-display: 32px;  --fw-display: 700;  --lh-display: 1.15;
+  --fs-h1:      26px;  --fw-h1:      700;  --lh-h1:      1.2;
+  --fs-h2:      20px;  --fw-h2:      600;  --lh-h2:      1.25;
+  --fs-body:    16px;  --fw-body:    400;  --lh-body:    1.5;
+  --fs-small:   14px;  --fw-small:   400;  --lh-small:   1.45;
+  --fs-label:   12px;  --fw-label:   500;  --lh-label:   1.4;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --radius: 8px;
+  --tap: 44px;
+  --container: 640px;
+  --header-h: 56px;
+  --focus-ring: 2px solid var(--accent);
+  --dur: 200ms;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --fs-display: 44px;
+    --fs-h1:      32px;
+    --fs-h2:      22px;
+    --header-h:   64px;
+  }
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-display); color: var(--ink); margin: 0; }
+p { margin: 0; }
+a { color: var(--secondary); text-underline-offset: 3px; text-decoration: none; }
+a:hover, a:focus-visible { text-decoration: underline; }
+:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+.skip-link {
+  position: absolute; left: var(--space-4); top: -100px; z-index: 100;
+  background: var(--card); color: var(--ink); padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+}
+.skip-link:focus { top: var(--space-2); }
+
+/* =========================================================
+   HEADER & MENU (same as index.html)
+   ========================================================= */
+.site-header {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--primary); color: var(--card);
+  height: var(--header-h);
+}
+.site-header .container {
+  height: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+}
+.brand {
+  font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--card);
+  display: inline-flex; align-items: center; min-height: var(--tap);
+}
+.brand:hover, .brand:focus-visible { text-decoration: none; }
+.brand span { opacity: 0.8; font-weight: 400; margin-left: var(--space-1); }
+.header-actions { display: flex; align-items: center; gap: var(--space-1); }
+.back-link {
+  display: inline-flex; align-items: center; min-height: var(--tap); padding-inline: var(--space-3);
+  border-radius: var(--radius); color: var(--card); font-weight: 500; font-size: var(--fs-small);
+}
+.back-link:hover, .back-link:focus-visible { background: rgba(255,255,255,0.12); text-decoration: none; }
+.back-link:focus-visible, .site-header .menu-btn:focus-visible { outline-color: var(--card); }
+.menu-btn {
+  width: var(--tap); height: var(--tap); display: grid; place-items: center;
+  background: transparent; border: 0; border-radius: var(--radius); color: var(--card); cursor: pointer;
+}
+.menu-btn:hover { background: rgba(255,255,255,0.12); }
+
+.scrim {
+  position: fixed; inset: 0; z-index: 30; background: var(--scrim);
+  opacity: 0; transition: opacity var(--dur);
+}
+.scrim.is-open { opacity: 1; }
+.menu-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 40;
+  width: min(320px, 86vw); background: var(--card);
+  padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2);
+  transform: translateX(100%); transition: transform var(--dur) ease-out;
+}
+.menu-panel.is-open { transform: translateX(0); }
+.menu-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
+.menu-panel-head .brand { color: var(--ink); }
+.menu-panel .menu-btn { color: var(--ink); }
+.menu-panel .menu-btn:hover { background: var(--surface); }
+.menu-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.menu-list a {
+  display: flex; align-items: center; min-height: var(--tap); padding-inline: var(--space-3);
+  border-radius: var(--radius); color: var(--ink); font-weight: 500;
+}
+.menu-list a:hover, .menu-list a:focus-visible { background: var(--surface); text-decoration: none; }
+.menu-list a[aria-current="page"] { background: var(--secondary-tint); color: var(--primary); }
+.menu-divider { border: 0; border-top: 1px solid var(--hairline); margin: var(--space-2) 0; }
+.menu-note { margin-top: auto; font-size: var(--fs-label); color: var(--ink-muted); padding: var(--space-3); }
+
+/* =========================================================
+   LEGAL CONTENT
+   ========================================================= */
+.legal { padding-block: var(--space-12) var(--space-8); }
+.legal-head { display: grid; gap: var(--space-2); margin-bottom: var(--space-6); }
+.legal-head h1 { font-size: var(--fs-h1); font-weight: var(--fw-h1); line-height: var(--lh-h1); }
+.eyebrow {
+  font-size: var(--fs-label); font-weight: var(--fw-label); line-height: var(--lh-label);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary);
+}
+.legal-head .subtitle { color: var(--ink-muted); }
+.legal-head .updated {
+  font-size: var(--fs-small); line-height: var(--lh-small); color: var(--ink-muted);
+}
+.legal-card {
+  background: var(--card); border: 1px solid var(--hairline); border-radius: var(--radius);
+  padding: var(--space-6) var(--space-4);
+  display: grid; gap: var(--space-8);
+}
+@media (min-width: 768px) { .legal-card { padding: var(--space-8); } }
+.legal-card section { display: grid; gap: var(--space-3); }
+.legal-card h2 { font-size: var(--fs-h2); font-weight: var(--fw-h2); line-height: var(--lh-h2); }
+.legal-card ul { margin: 0; padding-left: var(--space-6); display: grid; gap: var(--space-2); }
+.legal-card address { font-style: normal; }
+.legal-card .fine { font-size: var(--fs-small); line-height: var(--lh-small); color: var(--ink-muted); }
+
+.legal-card a { color: var(--primary); }
+.legal-card a:hover, .legal-card a:focus-visible { text-decoration: underline; }
+
+/* Unfilled values the operator must replace before publishing */
+.todo {
+  background: var(--warning-tint); box-shadow: inset 0 -2px 0 var(--warning);
+  padding: 0 var(--space-1); border-radius: 2px; font-weight: 500;
+}
+
+/* =========================================================
+   FOOTER (same as index.html)
+   ========================================================= */
+.site-footer {
+  border-top: 1px solid var(--hairline); padding-block: var(--space-8);
+  font-size: var(--fs-small); line-height: var(--lh-small); color: var(--ink-muted);
+}
+.site-footer .container { display: grid; gap: var(--space-3); }
+.site-footer strong { color: var(--ink); }
+.site-footer a { color: var(--primary); }   /* --secondary is 4.1:1 on --surface; --primary keeps AA */
+.footer-links { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.footer-links a { display: inline-flex; align-items: center; min-height: var(--tap); font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
 </head>
 
 <body>
@@ -48,6 +255,7 @@
 <main id="main" class="legal">
   <div class="container">
     <div class="legal-head">
+      <p class="eyebrow">Legal</p>
       <h1>Privacy Policy / <span lang="de">Datenschutzerklärung</span></h1>
       <p class="updated">Last updated: 3 November 2026</p>
     </div>
@@ -65,13 +273,13 @@
           Torgauer Straße 63<br>
           12627 Berlin<br>
           Germany<br>
-          Email: <span class="todo">[CONTACT EMAIL]</span>
+          Email: <a href="mailto:stiled.team@gmail.com">stiled.team@gmail.com</a>
         </address>
       </section>
 
       <section aria-labelledby="h-logs">
         <h2 id="h-logs">Hosting and server logs</h2>
-        <p>This site is hosted by <span class="todo">[HOSTING PROVIDER]</span>. When you open a page, the host's servers automatically process technical data so they can deliver the site and keep it secure. This includes:</p>
+        <p>This site is hosted by <span class="todo">Netlify</span>. When you open a page, the host's servers automatically process technical data so they can deliver the site and keep it secure. This includes:</p>
         <ul>
           <li>your IP address</li>
           <li>the date and time of the request</li>
@@ -104,7 +312,7 @@
           <li><strong>object</strong> to processing based on legitimate interest (Art. 21)</li>
           <li><strong>withdraw consent</strong> at any time, with effect for the future (Art. 7(3)). This site doesn't currently ask for consent for anything.</li>
         </ul>
-        <p>To use any of these rights, email <span class="todo">[CONTACT EMAIL]</span>. Because the only personal data involved is the host's short-lived server logs, there may be little or nothing to hand over, but you'll always get an answer.</p>
+        <p>To use any of these rights, email <a href="mailto:stiled.team@gmail.com">stiled.team@gmail.com</a>. Because the only personal data involved is the host's short-lived server logs, there may be little or nothing to hand over, but you'll always get an answer.</p>
       </section>
 
       <section aria-labelledby="h-authority">
@@ -138,6 +346,46 @@
   </div>
 </footer>
 
-<script src="assets/menu.js"></script>
+<script>
+/* Slide-in menu for the legal pages — same behaviour as index.html:
+   closes on Esc, scrim tap or link tap; traps focus while open. */
+(() => {
+  const menu = document.getElementById("menu-panel");
+  const scrim = document.getElementById("menu-scrim");
+  const openBtn = document.getElementById("menu-open");
+  const closeBtn = document.getElementById("menu-close");
+
+  function openMenu() {
+    menu.hidden = scrim.hidden = false;
+    requestAnimationFrame(() => { menu.classList.add("is-open"); scrim.classList.add("is-open"); });
+    openBtn.setAttribute("aria-expanded", "true");
+    document.body.style.overflow = "hidden";
+    closeBtn.focus();
+  }
+  function closeMenu(returnFocus = true) {
+    menu.classList.remove("is-open"); scrim.classList.remove("is-open");
+    openBtn.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(() => { menu.hidden = scrim.hidden = true; }, reduce ? 0 : 200);
+    if (returnFocus) openBtn.focus();
+  }
+
+  openBtn.addEventListener("click", openMenu);
+  closeBtn.addEventListener("click", () => closeMenu());
+  scrim.addEventListener("click", () => closeMenu());
+  menu.addEventListener("click", e => { if (e.target.closest("a")) closeMenu(false); });
+  document.addEventListener("keydown", e => {
+    if (menu.hidden) return;
+    if (e.key === "Escape") { closeMenu(); return; }
+    if (e.key === "Tab") {
+      const f = [...menu.querySelectorAll("a, button")];
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+})();
+</script>
 </body>
 </html>
